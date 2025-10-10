@@ -457,3 +457,37 @@ pub static COUNTER_DESC = FragmentIR {
     ],
 };
 ```
+
+# UI data model
+
+Parts:
+
+- supplied render data:
+    - styling, alignment, layout algorithm
+- measurements (intrinsic sized)
+- derived render data:
+    - actual positions
+- layout tree:
+    - container fragment <-> contained fragment
+- event handlers (maybe part of supplied render data)
+
+All these are conceptually platform-independent. And could be handled as any other
+application data (in stores).
+
+The renderers can simply take thisdata and update the UI.
+
+Things to analyse:
+
+- layout
+    - intristic sizes (text fragment for example)
+- layers
+    - dialogs
+    - popups and dropdowns
+    - notifications (snackbar)
+- events
+    - i'm thinking about something like this:
+       - event queue loop:
+          - take event, execute event handler - changes stores
+          - drain_notifications will execute all necessary app state changes
+            - could update render data as well, queue changed render data
+          - apply changed render data to actual UI
