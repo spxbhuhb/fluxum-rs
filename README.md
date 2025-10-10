@@ -20,7 +20,10 @@ Expect:
 
 If you’re interested in the long-term vision or want to follow the design process, this is the right place.
 
-See [design.md](doc/design.md) for details.
+In this case:
+- [acceptable.md](doc/acceptable.md) for parts that already have a somewhat acceptable design
+- [focus.md](doc/focus.md) for the part that is currently focused
+- [pending.md](doc/pending.md) for parts that still have to be designed
 
 If you’re looking for a production-ready UI library — check back later!
 
