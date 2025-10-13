@@ -1,0 +1,115 @@
+// --------------------------
+//  Base Rules
+// --------------------------
+
+WHITESPACE  = _{ " " | "\t" | NEWLINE }
+NEWLINE     = _{ "\r\n" | "\n" | "\r" }
+IDENT       = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+NUMBER      = @{ ASCII_DIGIT+ }
+STRING      = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+// --------------------------
+//  Top-level Structure
+// --------------------------
+
+fragment_decl = {
+    fragment_header ~ fragment_content
+}
+
+fragment_header = {
+    IDENT ~ "(" ~ param_list? ~ ")"
+}
+
+param_list = {
+    param_decl ~ ("," ~ param_decl)*
+}
+
+param_decl = {
+    IDENT ~ ":" ~ type_ref
+}
+
+type_ref = @{ IDENT }
+
+fragment_content = {
+    "{" ~ store_decl* / build_stmt* ~ "}"
+}
+
+// --------------------------
+//  Store Declarations
+// --------------------------
+
+store_decl = {
+    "store" ~ IDENT ~ "=" ~ expr ~ ";"
+}
+
+expr = _{ NUMBER / STRING / IDENT / interpolated_string }
+
+interpolated_string = @{
+    "\"" ~ (("${" ~ IDENT ~ "}") / (!"\"" ~ ANY))* ~ "\""
+}
+
+// --------------------------
+//  Build Statements
+// --------------------------
+
+build_stmt = {
+  call_stmt / control_stmt
+}
+
+// --------------------------
+//  Calls
+// --------------------------
+
+call_stmt = { simple_call / higher_order_call }
+
+simple_call = {
+  IDENT ~ "(" ~ arg_list? ~ ")" ~ instruction_chain?
+}
+
+higher_order_call = {
+  IDENT ~ "(" ~ arg_list? ~ ")" ~ block ~ instruction_chain?
+}
+
+arg_list = {
+  expr ~ ("," ~ expr)*
+}
+
+instruction_chain = {
+  (".." ~ instruction)+
+}
+
+instruction = {
+  IDENT ~ ("{" ~ arg_list? ~ "}")?
+}
+
+// --------------------------
+//  Control flow
+// --------------------------
+
+control_stmt = {
+  for_stmt / if_stmt
+}
+
+for_stmt = {
+  "for" ~ "(" ~ IDENT ~ "in" ~ iterator ~ ")" ~ block
+}
+
+iterator = { expr }
+
+if_stmt = {
+  "if" ~ "(" ~ condition ~ ")" ~ block ~ else_clause?
+}
+
+else_clause = {
+  "else" ~ ( block / if_stmt )
+}
+
+condition = { expr }
+
+// ==========================
+//  Blocks
+// ==========================
+
+block = {
+  "{" ~ build_stmt* ~ "}"
+}

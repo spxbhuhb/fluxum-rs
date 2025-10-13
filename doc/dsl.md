@@ -1,57 +1,64 @@
-```text
-Program        ::= FragmentDecl*
+# Fragment DSL
 
-FragmentDecl   ::= "fragment!"? "{" FragmentBody "}"
-FragmentBody   ::= FragmentHeader FragmentMembers
-FragmentHeader ::= Ident "(" ParamList? ")"?
-ParamList      ::= Param ("," Param)*
-Param          ::= Ident ":" Type
+1. **Fragment DSL** is a declarative language for describing fragments.
+2. The DSL is formally defined in [dsl.pest](dsl.pest).
+3. The [**Fragment Compiler**](compiler.md) turns the DSL into the [**Fragment IR**](fir.md).
 
-FragmentMembers ::= (StoreDecl | NodeDecl)*
+Example:
 
-StoreDecl      ::= "store" Ident "=" Expr
+```rust
+fragment! {
+   Counter(label : String) {
+      store count = 0
 
-NodeDecl       ::= NodeOpen Block NodeClose?
-NodeOpen       ::= Ident OptArgs "{" OpenInstrList?
-NodeClose      ::= "}" CloseInstrList?
-Block          ::= FragmentMembers?    // children
-
-OpenInstrList  ::= Instr (Chain Instr)*
-CloseInstrList ::= Instr (Chain Instr)*
-Chain          ::= ".."
-
-Instr          ::= StyleUse | InstrCall | InstrFlag
-
-StyleUse       ::= Ident                      // refers to a named style
-InstrCall      ::= Ident "{" ArgList? "}"
-InstrFlag      ::= Ident                      // e.g., no_select, space_between
-
-ArgList        ::= Arg ("," Arg)*
-Arg            ::= Ident ":" Value
-OptArgs        ::= /* empty */ | "{" ArgList "}"
-
-Value          ::= Number Unit? 
-                 | String
-                 | ColorLiteral 
-                 | Enum
-                 | Bool
-                 | ResourceRef
-                 | Tuple
-                 | List
-                 | InterpString              // for text content interpolation
-
-Unit           ::= "DIP" | "SP"
-Enum           ::= Ident                      // e.g., max, container, content, wrap, etc.
-Bool           ::= "true" | "false"
-Tuple          ::= "(" Value ("," Value)+ ")"
-List           ::= "[" Value ("," Value)* "]"
-ColorLiteral   ::= "#" Hex6 | "rgb" "(" Int "," Int "," Int ")"
-ResourceRef    ::= Ident                      // font names, image ids, etc.
-Number         ::= Int | Float
-Int            ::= [0-9]+
-Float          ::= [0-9]+"."[0-9]+
-String         ::= "\"" .*? "\""               // usual escapes allowed
-Ident          ::= [_A-Za-z][_0-9A-Za-z]*
-
-StyleDecl      ::= "style" Ident "(" ParamList? ")"? "{" Instr (Chain Instr)* "}"
+      column {
+         padding { 16 } .. border { Red, 1 }
+         
+         button {
+            on_click { count = count + 1 }
+            text { "Click me" }
+         }
+   
+         text { "${label}: ${count}" } .. text_small
+      }
+   }
+}
 ```
+
+## Structure
+
+The DSL declares fragments, each having:
+
+- a name
+- external store declarations (parameters, optional)
+- internal store declarations (optional)
+- building statements (optional)
+
+A building statement may be:
+
+- fragment creation
+- rendering instruction
+- control strucrure
+
+
+## Resources
+
+The DSL may declare or reference resources.
+
+The DSL **declares** resources it contains the actual value of the resource, such as a string
+literal or an inline style.
+
+The DSL **references** resources when the resource is declared outside the fragment.
+
+Resource types:
+
+- numbers
+- strings
+- images
+- vector graphics
+- styles
+- fonts
+- files
+
+>> TODO explain resource stores (const for literals, something else for downloaded resources)
+>> TODO explain ResourceTable
