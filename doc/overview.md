@@ -78,3 +78,7 @@ DSL Source
 
 * [**Store**](stores.md)
   A backend-neutral state container exposing reactive signals to fragments.
+
+* [**Scene**](scene.md)
+  The root of the rendered interface. It organizes all visual content into
+  **channels**, **viewports**, and **layers**.

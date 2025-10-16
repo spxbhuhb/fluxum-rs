@@ -38,8 +38,7 @@ A building statement may be:
 
 - fragment creation
 - rendering instruction
-- control strucrure
-
+- control structure
 
 ## Resources
 

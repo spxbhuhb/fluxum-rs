@@ -1,10 +1,56 @@
 # Fragment Renderer
 
+## Definitions
+
 **Actual UI**: The platform-dependent UI which is actually shown to the user.
 
 **Adapter**: A platform-dependent adapter that is able to create/remove/update nodes in the actual UI.
 
 **Node**: A part of the actual UI that can be added/removed/updated. DOM node, View instance, UIView instance.
+
+**Container** : A node that can contain other nodes.
+
+**Positional Container** : A container in which the children are placed at pre-defined positions.
+
+**Algorithmic Container** : A container in which the children are placed by a layout algorithm.
+
+**DIP**: Device Independent Pixel
+
+## Box model
+
+```text
+    Top
+Left┌────────────────────────────────────────────┐   ┬
+    │                  MARGIN                    │   │
+    │  ┌──────────────────────────────────────┐  │   │
+    │  │               BORDER                 │  │   │
+    │  │  ┌───────────────────────────────┐   │  │   │
+    │  │  │           PADDING             │   │  │   │  Height
+    │  │  │  ┌─────────────────────────┐  │   │  │   │
+    │  │  │  │        CONTENT          │  │   │  │   │
+    │  │  │  └─────────────────────────┘  │   │  │   │
+    │  │  └───────────────────────────────┘   │  │   │
+    │  └──────────────────────────────────────┘  │   │
+    └────────────────────────────────────────────┘   ┴ 
+    ├────────────────── Width ───────────────────┤
+```
+
+The first three: margin, border and padding together are called **surrounding**.
+
+`content`, called **content box** is the actual content of the node, for layouts it 
+contains the children, for non-layout nodes it contains the actual content such as 
+text, image, etc.
+
+Width and height together define the size of the node.
+
+In contrast with other layout systems, **margin is counted into the size** of a node.
+
+As the picture above shows, top-left means the top-left corner of the surrounding,
+margins included.
+
+- **padding** uses the background of the node.
+- **border** uses the specified border color.
+- **margin** is transparent.
 
 ## Render flow
 
@@ -22,8 +68,7 @@
    ↓
 [Layout Engine]
    ├─ Measure intrinsic sizes
-   ├─ Compute layout
-   ├─ Produce derived render data (positions, bounds, line boxes, etc.)
+   ├─ Compute layout → update derived render data (positions, bounds, line boxes, etc.)
    ├─ Generate position patches
    ↓
 [Adapter]
@@ -54,24 +99,14 @@ store changes, they update the supplied render data according to the instruction
 Instructions which handle dimensional data **always** store the value in DIP
 (Device Independent Pixel).
 
-Render data **always** stores dimensional data as **raw pixels**.
-
 ```rust
 struct DIP(f32); // device independent pixel
-struct PX(f32); // raw pixel
 
 struct Surrounding {
     top : DIP,
     right : DIP,
     left : DIP,
     bottom: DIP
-}
-
-struct RawSurrounding {
-    top : PX,
-    right : PX,
-    left : PX,
-    bottom: PX
 }
 
 struct Color {
@@ -88,102 +123,82 @@ enum Instruction {
 
 struct RenderData {
     dirty_mask : u64, // 1 when the field has been changed since the last render
-    padding: RawSurrounding,
+    padding: Surrounding,
     background_color : Color
 }
 ```
 
-## Box model
-
-```text
-    Top
-Left┌────────────────────────────────────────────┐   ┬
-    │                  MARGIN                    │   │
-    │  ┌──────────────────────────────────────┐  │   │
-    │  │               BORDER                 │  │   │
-    │  │  ┌───────────────────────────────┐   │  │   │
-    │  │  │           PADDING             │   │  │   │  Height
-    │  │  │  ┌─────────────────────────┐  │   │  │   │
-    │  │  │  │        CONTENT          │  │   │  │   │
-    │  │  │  └─────────────────────────┘  │   │  │   │
-    │  │  └───────────────────────────────┘   │  │   │
-    │  └──────────────────────────────────────┘  │   │
-    └────────────────────────────────────────────┘   ┴ 
-    ├────────────────── Width ───────────────────┤
-```
-
-The first three: margin, border and padding together are called **surrounding**.
-
-Width and height together define the size of the node.
-
-In contrast with other layout systems, **margin is counted into the size** of a node.
-
-As the picture above shows, top-left means the top-left corner of the surrounding,
-margins included.
-
 ## Primitives
 
-Each supported platform provides the following primitives:
+Each supported platform provides the following primitives.
 
-1. Box
-    - A generic rectangle to paint and clip.
-    - Props: background (solid or none), border {color, width}, corner_radius, opacity, clip (on/off).
-2. Text
-    - Props: content (string), font (ref), size, weight, line_height, color, align (start/center/end), wrap (word/any/none), overflow (visible/ellipsis).
-3. Raster image
-    - Props: source (image ref), fit (fill/contain/cover/none), align (x,y inside box), opacity.
-4. Icon
-    - A tiny, stylable symbol (font-glyph or vector).
-    - Props: icon_ref (glyph id or vector path id), size, color, opacity.
-5. Native text host
-    - Platform native text input
-    - Props:
-        - kind: "single" | "multiline" | "password" | "number" | "search"
-        - placeholder?: string
-        - font, size, color, align, line_height? (styling parity with Text)
-        - keyboard_hint?: Text | Email | Number | Url | Password
-        - autocorrect?: bool, autocapitalize?: bool, spellcheck?: bool
-        - selection_color?, caret_color? (optional, platform may ignore)
-6. Group
-    - A logical parent with no paint of its own.
-    - Props: opacity, transform (translate only to start), isolation (new stacking context? optional).
-7. Native host
-    - Renders native platform widgets, provideds way to use special features of a given platform.
+### Group
 
-## Somewhat outdated stuff
+A logical parent with no paint of its own.
 
-### UI data model
+Supported styling:
 
-Parts:
+- none
 
-- supplied render data:
-    - styling, alignment, layout algorithm
-- measurements (intrinsic sized)
-- derived render data:
-    - actual positions
-- layout tree:
-    - container fragment <-> contained fragment
-- event handlers (maybe part of supplied render data)
+### Rectangle
 
-All these are conceptually platform-independent. And could be handled as any other
-application data (in stores).
+A generic rectangle to paint background and borders.
 
-The renderers can simply take this data and update the UI.
+Supported styling:
 
-Things to analyse:
+- background
+- border
+- corner_radius
+- shadow
 
-- layout
-    - intristic sizes (text fragment for example)
-- layers
-    - dialogs
-    - popups and dropdowns
-    - notifications (snackbar)
-- events
-    - i'm thinking about something like this:
-        - event queue loop:
-            - take event, execute event handler - changes stores
-            - drain_notifications will execute all necessary app state changes
-                - could update render data as well, queue changed render data
-            - apply changed render data to actual UI
+### Text
 
-Should we go with platform-dependent animations or simply model them ourselves?
+A non-breakable string of characters.
+
+Supported styling:
+
+- font { name, size, weight, color }
+- line_height
+- no_select
+- underline
+- small_caps
+- letter_spacing
+- text_overflow { visible / ellipsis }
+
+### Raster image
+
+An image (PNG, JPG).
+
+Size of the image is specified by layout.
+
+Supported styling:
+
+- none
+
+### Icon
+
+A tiny, stylable symbol (font-glyph or vector).
+
+Size of the icon is specified by the layout.
+
+Supported styling:
+
+- color
+
+### Native text host
+
+A platform native text input.
+
+Supported styling:
+
+- font { name, size, weight, color }
+- line_height
+- letter_spacing
+
+### Native host
+
+Renders native platform widgets, provideds way to use special features of a given platform.
+
+Supported styling:
+
+- none
