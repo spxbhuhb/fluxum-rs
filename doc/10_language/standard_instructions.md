@@ -1,4 +1,4 @@
-# Instructions
+# Standard Instructions
 
 **DIP**: Device Independent Pixel
 

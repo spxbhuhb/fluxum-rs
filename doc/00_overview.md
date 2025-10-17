@@ -26,29 +26,29 @@ than syntax.
 
 # Conceptual Model
 
-The library uses **fragments** to transform a tree of reactive **stores** into one or more **scenes**
-of **nodes** which is then rendered into target backend **primitives**.
+The library uses **fragments** to transform a tree of reactive **stores** into a **scene** 
+which is then rendered into target backend **primitives**.
 
 ```text
-  Application         State to UI       Abstract render    Platform dependent    
-state (reactive)     transformation           tree            UI elements
+  Application         State to UI             Scene          Platform dependent    
+state (reactive)     transformation                             UI elements
 
-  ┌────────┐          ┌───────────┐         ┌───────┐        ┌────────────┐
-  │ Stores │          │ Fragments │         │ Nodes │        │ Primitives │
-  └────────┘          └───────────┘         └───────┘        └────────────┘
+  ┌────────┐          ┌───────────┐         ┌───────┐         ┌────────────┐
+  │ Stores │    →     │ Fragments │    →    │ Nodes │    →    │ Primitives │
+  └────────┘          └───────────┘         └───────┘         └────────────┘
 
 ├─────────────────────────────────┤     ├───────────────────────────────────┤
     Defined in source code                        Built during runtime
 ```
 
 * [**Store**](30_runtime/stores.md)
-  A backend-neutral state container exposing reactive signals to fragments.
+  A backend-neutral state container exposing reactive notifications to fragments and other stores.
 
 * **Fragment**
   A reusable declarative unit. A fragment can be headless (logic-only) or produce renderable content.
 
 * [**Scene**](30_runtime/scene.md)
-  A root of the rendered interface. It organizes all visual content into **channels**,
+  A collection of platform-independent UI nodes. Organizes all visual content into **channels**,
   **viewports**, and **layers**.
 
 # Architecture
@@ -64,21 +64,21 @@ both modular and extensible.
 ```text
 DSL Source
    ↓
-[Fragment Compiler] ──→ Fragment IR (FIR)
+[Fragment Compiler] → Fragment IR (FIR)
    ↓
-[Fragment Linker] ──→ Linked Runtime Tree of instances (with reactive graph of stores and signals)
+[Fragment Linker] → Linked runtime tree of stores and fragment instances
    ↓
-[Fragment Renderer] ──→ Output (UI / PDF / PNG / etc.)
+[Fragment Renderer] → Output (UI / PDF / PNG / etc.)
 ```
 
 ## Stages and Responsibilities
 
-| Stage                  | Component                                | Responsibility                                                                                                                                     |
-|------------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| **1. Source Code**     | **Fragment DSL**                         | **Defines** declarative fragment structures written by the developer.                                                                              |
-| **2. Compile Stage**   | **Fragment Compiler** (procedural macro) | **Transforms** the DSL into backend-neutral **Fragment IR (FIR)**; performs validation, symbol resolution, and metadata embedding.                 |
-| **3. Link Stage**      | **Fragment Linker** (runtime)            | **Instantiates and links** fragments, stores, and handlers into a connected runtime tree.                                                          |
-| **4. Execution Stage** | **Fragment Renderer** (runtime)          | **Applies** the linked runtime tree to the target backend. After the initial build, updates are propagated incrementally through reactive signals. |
+| Stage                  | Component                                | Responsibility                                                                                                                                           |
+|------------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **1. Source Code**     | **Fragment DSL**                         | **Defines** declarative fragment structures written by the developer.                                                                                    |
+| **2. Compile Stage**   | **Fragment Compiler** (procedural macro) | **Transforms** the DSL into backend-neutral **Fragment IR (FIR)**; performs validation, symbol resolution, and metadata embedding.                       |
+| **3. Link Stage**      | **Fragment Linker** (runtime)            | **Instantiates and links** fragments, stores, and handlers into a connected runtime tree.                                                                |
+| **4. Execution Stage** | **Fragment Renderer** (runtime)          | **Applies** the linked runtime tree to the target backend. After the initial build, updates are propagated incrementally through reactive notifications. |
 
 ## Core Concepts
 
@@ -95,7 +95,7 @@ DSL Source
   The runtime component that takes FIR definitions, instantiates fragments, and links them into a connected runtime tree with stores, actions, and derived values.
 
 * [**Fragment Renderer (FR)**](40_render/renderer.md)
-  The runtime component that applies the linked runtime tree to a specific backend. It performs the initial build and then reacts to fine-grained signal updates.
+  The runtime component that applies the linked runtime tree to a specific backend. It performs the initial build and then reacts to fine-grained notifications.
 
 * [**Fragment Instance**](30_runtime/instances.md)
   A concrete runtime instance of a fragment created by the Fragment Linker.

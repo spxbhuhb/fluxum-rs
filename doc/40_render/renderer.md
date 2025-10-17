@@ -6,7 +6,9 @@
 
 **Adapter**: A platform-dependent adapter that is able to create/remove/update nodes in the actual UI.
 
-**Abstract Render Tree (ART)**: A tree of nodes that contains all information needed to render the actual UI.
+**Abstract Render Tree (ART)**: Runtime representation of a scene. A tree of nodes that contains all information needed to render the actual UI.
+
+**Renderable Fragment**: A fragment that emits nodes to the ART.
 
 **Node**: A part of the ART that can be added/removed/updated.
 
@@ -27,10 +29,10 @@
    ├─ Primary store mutations (direct changes from event handlers)
    ↓
 [Store runtime] 
-   ├─ Drain notifications (cascading store mutations), add fragments to render queue
+   ├─ Drain notifications (cascading store mutations), add nodes to render queue
    ↓
 [Instruction Applier]
-   ├─ Apply fragment instructions → update supplied render data
+   ├─ Apply instructions → update supplied render data
    ├─ Determine invalidation type (layout / paint)
    ├─ Generate paint patches
    ↓
@@ -48,7 +50,7 @@ Output (UI / PDF / PNG / etc.)
 
 ## Render data
 
-Each primitive has a render data structure which consists of two major parts:
+Each node has a render data structure which consists of two major parts:
 
 - supplied render data:
     - styling, alignment, layout algorithm
@@ -57,12 +59,13 @@ Each primitive has a render data structure which consists of two major parts:
 
 ### Supplied render data
 
-Each primitive fragment has an external store called `instructions`. The
+Each renderable fragment has an external store called `instructions`. The
  **Fragment Compiler** initializes this store from the instructions present in
 the DSL.
 
-The primitive fragments subscribe to this store, and whenever the value of the 
-store changes, they update the supplied render data according to the instructions.
+Renderable fragments subscribe to this store, and whenever the value of the 
+store changes, they update the supplied render data of their node according
+to the instructions.
 
 Instructions which handle dimensional data **always** store the value in DIP
 (Device Independent Pixel).
@@ -86,7 +89,7 @@ struct Color {
 
 enum Instruction {
     Padding(Surrounding),
-    BackgroundColor(Color)
+    Background(Color)
 }
 
 struct RenderData {

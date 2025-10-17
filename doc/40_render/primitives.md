@@ -55,7 +55,7 @@ Supported styling:
 
 - color
 
-## Native text host
+## Native text input
 
 A platform native text input.
 

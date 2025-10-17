@@ -8,7 +8,7 @@ Additional information:
 
 - [**Box Model**](box_model.md)
 - [**Standard Fragments**](standard_fragments.md)
-- [**Instructions**](instructions.md)
+- [**Standard Instructions**](standard_instructions.md)
 
 Example:
 

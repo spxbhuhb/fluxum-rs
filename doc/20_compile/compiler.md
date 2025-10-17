@@ -10,9 +10,9 @@ Ensure that all layout and decoration instructions (`padding`, `border`, `margin
 are applied to container nodes.
 
 **Transformation rule:**  
-If a primitive node receives surrounding instructions,
-the compiler emits an enclosing container node with those instructions
-and moves the primitive inside it.
+If a basic fragment receives surrounding instructions,
+the compiler emits an enclosing container with those instructions
+and moves the basic fragment inside it.
 
 Example:
 

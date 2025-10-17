@@ -2,7 +2,7 @@
 
 These fragments are part of the standard library.
 
-## Primitives
+## Basic fragments
 
 ### Text
 
@@ -15,8 +15,6 @@ These fragments are part of the standard library.
 ### Native Host
 
 ## Containers
-
-Containers are fragments and manually implemented actual UI nodes that can contain other nodes.
 
 ### Box
 
