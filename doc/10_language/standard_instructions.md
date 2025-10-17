@@ -1,6 +1,6 @@
 # Standard Instructions
 
-**DIP**: Device Independent Pixel
+**DIP**: Device Independent Pixel (floating point)
 
 ## Color
 
