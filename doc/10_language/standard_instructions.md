@@ -177,7 +177,14 @@ Note: naming is asymmetric on purpose, so there is no conflict between horizonta
 
 `scroll { horizontal|vertical|both }`
 
-The container’s content box area is scrollable (whatever you define as “inner size” in your docs). All child sizes (including your “margins are part of size” rule) contribute to the scrollable extent.
+The container’s content box area is scrollable (whatever you define as “inner size” in your docs). 
+All child sizes (including your “margins are part of size” rule) contribute to the scrollable extent.
+
+`scroll { <dir> }` and `<dim> { content }` are mutually exclusive in the given direction.
+These combinations on the same node generate a compile-time error:
+
+- `scroll { horizontal }` and `width { content }`
+- `scroll { vertical }` and `height { content }`
 
 ### Notes
 
