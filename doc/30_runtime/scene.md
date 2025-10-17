@@ -110,7 +110,7 @@ scene {
     channel tooltip {
         viewport {
             layer base {
-                tooltip_for { target_id: "save-button" text: "Save changes" }
+                box { text { "Save changes" } }
             }
         }
     }

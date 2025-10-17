@@ -1,5 +1,6 @@
 # Instructions
 
+**DIP**: Device Independent Pixel
 
 ## Color
 

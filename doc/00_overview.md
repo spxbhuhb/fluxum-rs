@@ -24,6 +24,33 @@ than syntax.
     Provide a layout and rendering pipeline that behaves predictably across backends. 
     Platform-dependent operations should be minimal, deterministic, and isolated from reactive logic.
 
+# Conceptual Model
+
+The library uses **fragments** to transform a tree of reactive **stores** into one or more **scenes**
+of **nodes** which is then rendered into target backend **primitives**.
+
+```text
+  Application         State to UI       Abstract render    Platform dependent    
+state (reactive)     transformation           tree            UI elements
+
+  ┌────────┐          ┌───────────┐         ┌───────┐        ┌────────────┐
+  │ Stores │          │ Fragments │         │ Nodes │        │ Primitives │
+  └────────┘          └───────────┘         └───────┘        └────────────┘
+
+├─────────────────────────────────┤     ├───────────────────────────────────┤
+    Defined in source code                        Built during runtime
+```
+
+* [**Store**](30_runtime/stores.md)
+  A backend-neutral state container exposing reactive signals to fragments.
+
+* **Fragment**
+  A reusable declarative unit. A fragment can be headless (logic-only) or produce renderable content.
+
+* [**Scene**](30_runtime/scene.md)
+  A root of the rendered interface. It organizes all visual content into **channels**,
+  **viewports**, and **layers**.
+
 # Architecture
 
 The library provides a structured way to define, compile, and execute declarative 
@@ -55,30 +82,20 @@ DSL Source
 
 ## Core Concepts
 
-* [**Fragment DSL**](dsl.md)
+* [**Fragment DSL**](10_language/dsl.md)
   A declarative language for describing fragments.
 
-* [**Fragment Compiler (FC)**](compiler.md)
+* [**Fragment Compiler (FC)**](20_compile/compiler.md)
   The procedural macro that compiles the Fragment DSL into **Fragment IR (FIR)**.
 
-* [**Fragment Intermediate Representation (FIR)**](fir.md)
+* [**Fragment Intermediate Representation (FIR)**](20_compile/fir.md)
   A backend-agnostic program that describes how a fragment should be built, connected, and parameterized for later linking and rendering.
 
-* [**Fragment Linker (FL)**](linker.md)
+* [**Fragment Linker (FL)**](30_runtime/linker.md)
   The runtime component that takes FIR definitions, instantiates fragments, and links them into a connected runtime tree with stores, actions, and derived values.
 
-* [**Fragment Renderer (FR)**](renderer.md)
+* [**Fragment Renderer (FR)**](40_render/renderer.md)
   The runtime component that applies the linked runtime tree to a specific backend. It performs the initial build and then reacts to fine-grained signal updates.
 
-* **Fragment**
-  A reusable declarative unit described in FIR. A fragment can be headless (logic-only) or produce renderable nodes.
-
-* [**Instance**](instances.md)
+* [**Fragment Instance**](30_runtime/instances.md)
   A concrete runtime instance of a fragment created by the Fragment Linker.
-
-* [**Store**](stores.md)
-  A backend-neutral state container exposing reactive signals to fragments.
-
-* [**Scene**](scene.md)
-  The root of the rendered interface. It organizes all visual content into
-  **channels**, **viewports**, and **layers**.

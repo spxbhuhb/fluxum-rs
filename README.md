@@ -20,7 +20,7 @@ Expect:
 
 If you’re interested in the long-term vision or want to follow the design process, this is the right place.
 
-In this case check [overview.md](doc/overview.md).
+In this case check [overview.md](doc/00_overview.md).
 
 If you’re looking for a production-ready UI library — check back later!
 

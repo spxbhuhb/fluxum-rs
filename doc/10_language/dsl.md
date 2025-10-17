@@ -2,7 +2,13 @@
 
 1. **Fragment DSL** is a declarative language for describing fragments.
 2. The DSL is formally defined in [dsl.pest](dsl.pest).
-3. The [**Fragment Compiler**](compiler.md) turns the DSL into the [**Fragment IR**](fir.md).
+3. The [**Fragment Compiler**](../20_compile/compiler.md) turns the DSL into the [**Fragment IR**](../20_compile/fir.md).
+
+Additional information:
+
+- [**Box Model**](box_model.md)
+- [**Standard Fragments**](standard_fragments.md)
+- [**Instructions**](instructions.md)
 
 Example:
 
