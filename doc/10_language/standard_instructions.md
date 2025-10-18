@@ -191,7 +191,7 @@ These combinations on the same node generate a compile-time error:
 **Overflow** is supported only by scrolling. In my experience overflow clip and hidden are
 tools junior developers use to hide layout bugs.
 
-### Decoration
+## Decoration
 
 ```
 color { rgba: u32 }
@@ -209,7 +209,7 @@ shadow { color : Color offset_x : DIP offset_y : DIP deviation : DIP }
 
 Note: `border` is a mix of decoration and layout. Border width is accounted for in the layout.
 
-### Event
+## Event
 
 ```
 on_click { }
@@ -230,7 +230,20 @@ no_pointer_events
 with_pointer_events
 ```
 
-### Text
+### On Resize
+
+`on_resize |rect : Option<Rect>| { <event-handler> }`
+
+The event handler is called when the node is resized. The call takes place after all layout changes
+are applied.
+
+- `rect` contains the position and size of the node.
+- If the sizes do not change during a layout pass, the event handler is not called.
+- Size comparison uses a small epsilon to avoid false positives.
+
+**NOTE** Be careful with this event handler, so you don't trigger infinite loops.
+
+## Text
 
 `SP` : Scaled Pixel
 
