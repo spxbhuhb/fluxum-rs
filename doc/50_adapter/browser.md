@@ -2,51 +2,66 @@
 
 Note: this file is very preliminary, it is just a bunch of ideas.
 
-- The Rust code is compiled to WebAssembly and runs in a worker (separate thread).
-- All DOM manipulation is done in the main thread with JavaScript.
+The browser adapter requires cross-origin isolation.
 
-## Browser events
+## Architecture
 
-A `SharedArrayBuffer` is used to communicate events from the browser to the Rust code.
+```text
+[Browser main thread]
+    └─ [Outer event handler]
+         ├─ Transform the browser event to binary representation in a `SharedArrayBuffer`.
+         └─ Send a message to the Drain Worker that contains (offset, size and sequence) of the event in the `SharedArrayBuffer`.
+      ↓
+[Event collector worker]
+    └─ [Inner event handler]
+         ├─ Put event (offset, size and sequence) into a round-robin queue.
+         └─ Notify the Frame Worker.
+      ↓   
+[Frame worker]
+    └─ [Frame processing loop]
+         ├─ Wait for a notification from the Event collector worker.
+         ├─ Process all events in the round-robin queue.
+         ├─ Transform UI patching operations into binary representation in a `SharedArrayBuffer`.
+         └─ Send a message to the Browser main thread that contains (offset, size and sequence) of the patch in the `SharedArrayBuffer`.
+```
 
-The buffer is separated into two areas:
+Note: there are two workers because it provides a way to drain the event queue. Without two independent workers events
+would have to be processed in one-by-one.
 
-- a small array of 64-bit atomics for the stateful lane
-- a larger ring of events for the transactional lane
+### Data structures
 
-Browser events are split into two lanes:
+There are two `SharedArrayBuffer`s:
 
-- stateful
-- transactional
+1. One for events from the browser to the frame worker: `event SAB`.
+2. One for UI patching operations from the frame worker to the browser: `patch SAB`.
 
-## Stateful lane
+The event collector worker and the frame worker share the queue of events.
 
-The stateful lane contains 64-bit atomics:
- 
-- window resize: 1 slot
-- continuous pointermove during drags: 1 slot
-- viewport scroll: N slots (per scrollable viewport)
+### Synchronization
 
-**Transactional lane, delivers all**
+Messages sent using `postMessage` store:
 
-- pointerdown/up, click, enter/leave
-- key*
-- wheel (usually transactional; may coalesce when scroll-animate)
+- offset and size of the data in the `SharedArrayBuffer`
+- sequence number of the message
+- current write pointer in the **other** `SharedArrayBuffer`
 
-### Passing events to Rust
+The workers advance write pointers as they process messages. They only advance
+when they get it in a message, so it is ensured that the other worker already
+processed the data.
 
->> explain how the events are moved from the buffers to the event queue, maybe
->> poll at flow start?
+**Sending and receiving algorithm**
 
-From there the standard [Render flow](../40_render/renderer.md#render-flow) 
-takes care of it.
+- Producer (writer):
+    - Write the payload bytes into the SAB.
+    - Write the sequence number into the SAB with Atomics.store — this is a release.
+    - Send a message carrying (offset, size, sequence) to the consumer (or write to the round-robin queue and notify).
+- Consumer (reader), upon receiving the message or a notification:
+    - Read the sequence number with Atomics.load — this is an acquire.
+    - Read and process payload.
 
 ## Backpressure
 
-Happens when:
+- The browser main thread drops events if there is not enough space in the `event SAB` (all events until space is available).
+- The frame worker waits for enough space in the `patch SAB` before emitting a patch.
+- There is no event coalescing.
 
-1. the DOM updates can't keep up with the Rust code,
-2. the Rust code can't keep up with events from the browser (e.g., mouse move).
-
->> I think (not sure) that we can handle this with the buffer rotation. The only problem
->> is when the buffer is full, we need to drop some events.
